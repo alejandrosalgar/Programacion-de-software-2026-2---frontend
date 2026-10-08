@@ -103,8 +103,9 @@ ng version
 En PowerShell, desde **esta** carpeta (donde esta este `paso_a_paso.md`):
 
 ```bash
-ng new . --routing --style=css --ssr=false --skip-git
-```
+ng new nombre-carpeta --directory=. --routing --style=css --ssr=false --skip-git
+npm install --legacy-peer-deps
+ ```
 
 | Flag | Por que |
 | --- | --- |
