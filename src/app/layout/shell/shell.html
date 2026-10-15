@@ -1,0 +1,14 @@
+<div class="layout">
+  <aside class="sidebar">
+    <h1>Banco ITM</h1>
+    <nav>
+      @for (item of menu; track item.ruta) {
+        <a [routerLink]="item.ruta" routerLinkActive="activo">{{ item.etiqueta }}</a>
+      }
+    </nav>
+  </aside>
+
+  <main class="contenido">
+    <router-outlet />
+  </main>
+</div>
