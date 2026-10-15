@@ -1,0 +1,94 @@
+<header class="crud-barra">
+    <h2>Cuentas</h2>
+  
+    <form class="filtro" (submit)="$event.preventDefault(); buscarPorId()">
+      <input
+        [(ngModel)]="idFiltro"
+        name="idFiltro"
+        placeholder="Filtrar por ID"
+        autocomplete="off"
+      />
+      <button type="submit" [disabled]="cargando()">Buscar</button>
+      <button type="button" class="secundario" (click)="limpiarFiltro()" [disabled]="cargando()">
+        Todos
+      </button>
+    </form>
+  
+    <button type="button" (click)="abrirCrear()">+ Crear</button>
+  </header>
+  
+  @if (mensaje()) {
+    <p class="mensaje" [class.error]="esError()">{{ mensaje() }}</p>
+  }
+  
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre cuenta</th>
+        <th>Cuenta</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (fila of filas(); track fila.id_cuenta) {
+        <tr>
+          <td class="id">{{ fila.id_cuenta }}</td>
+          <td>
+            {{ fila.primer_nombre }} {{ fila.segundo_nombre }}
+            {{ fila.primer_apellido }} {{ fila.segundo_apellido }}
+          </td>
+          <td>{{ fila.nombre_usuario }}</td>
+          <td class="acciones">
+            <button type="button" (click)="abrirEditar(fila)">Editar</button>
+            <button type="button" class="peligro" (click)="eliminar(fila)">Eliminar</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  
+  @if (popupAbierto()) {
+    <div class="fondo-popup" (click)="cerrarPopup()">
+      <form class="popup" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+        <h3>{{ modo() === 'crear' ? 'Crear usuario' : 'Editar usuario' }}</h3>
+  
+        <label class="campo">
+          <span>Primer nombre</span>
+          <input [(ngModel)]="formulario.primer_nombre" name="primer_nombre" required />
+        </label>
+        <label class="campo">
+          <span>Segundo nombre</span>
+          <input [(ngModel)]="formulario.segundo_nombre" name="segundo_nombre" />
+        </label>
+        <label class="campo">
+          <span>Primer apellido</span>
+          <input [(ngModel)]="formulario.primer_apellido" name="primer_apellido" required />
+        </label>
+        <label class="campo">
+          <span>Segundo apellido</span>
+          <input [(ngModel)]="formulario.segundo_apellido" name="segundo_apellido" />
+        </label>
+        <label class="campo">
+          <span>Nombre de usuario</span>
+          <input [(ngModel)]="formulario.nombre_usuario" name="nombre_usuario" required />
+        </label>
+        <label class="campo">
+          <span>{{ modo() === 'crear' ? 'Clave' : 'Clave (vacio = no cambiar)' }}</span>
+          <input
+            [(ngModel)]="formulario.clave"
+            name="clave"
+            type="password"
+            autocomplete="new-password"
+            [required]="modo() === 'crear'"
+          />
+        </label>
+  
+        <div class="popup-acciones">
+          <button type="button" class="secundario" (click)="cerrarPopup()">Cancelar</button>
+          <button type="submit" [disabled]="cargando()">Guardar</button>
+        </div>
+      </form>
+    </div>
+  }
+  
