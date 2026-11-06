@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { Usuario, UsuarioCreate, UsuarioUpdate } from '../../models/usuario.model';
@@ -12,23 +12,40 @@ type ModoPopup = 'crear' | 'editar';
   imports: [FormsModule],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.css',
+  host: { '(document:keydown.escape)': 'cerrarDialogos()' },
 })
-export class Usuarios implements OnInit {
+export class Usuarios implements OnInit, OnDestroy {
   private readonly usuarioService = inject(UsuarioService);
 
   readonly filas = signal<Usuario[]>([]);
+  readonly paginaActual = signal(1);
+  readonly tamanoPagina = 8;
+  readonly totalPaginas = computed(() => Math.max(1, Math.ceil(this.filas().length / this.tamanoPagina)));
+  readonly filasPagina = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.tamanoPagina;
+    return this.filas().slice(inicio, inicio + this.tamanoPagina);
+  });
+  readonly indiceInicial = computed(() => (this.filas().length ? (this.paginaActual() - 1) * this.tamanoPagina + 1 : 0));
+  readonly indiceFinal = computed(() => Math.min(this.paginaActual() * this.tamanoPagina, this.filas().length));
   readonly mensaje = signal('');
   readonly esError = signal(false);
   readonly cargando = signal(false);
   readonly popupAbierto = signal(false);
   readonly modo = signal<ModoPopup>('crear');
+  readonly formularioEnviado = signal(false);
+  readonly pendienteEliminar = signal<Usuario | null>(null);
 
   idFiltro = '';
   formulario: UsuarioCreate = this.formularioVacio();
   private idEditando = '';
+  private avisoTimeout?: number;
 
   ngOnInit(): void {
     this.cargarTodos();
+  }
+
+  ngOnDestroy(): void {
+    window.clearTimeout(this.avisoTimeout);
   }
 
   buscarPorId(): void {
@@ -42,7 +59,7 @@ export class Usuarios implements OnInit {
     this.usuarioService.obtener(id).subscribe({
       next: (usuario) => {
         this.filas.set([usuario]);
-        this.avisar('');
+        this.paginaActual.set(1);
         this.cargando.set(false);
       },
       error: (error: HttpErrorResponse) => {
@@ -55,6 +72,7 @@ export class Usuarios implements OnInit {
 
   limpiarFiltro(): void {
     this.idFiltro = '';
+    this.paginaActual.set(1);
     this.cargarTodos();
   }
 
@@ -62,6 +80,7 @@ export class Usuarios implements OnInit {
     this.modo.set('crear');
     this.idEditando = '';
     this.formulario = this.formularioVacio();
+    this.formularioEnviado.set(false);
     this.popupAbierto.set(true);
   }
 
@@ -76,14 +95,39 @@ export class Usuarios implements OnInit {
       nombre_usuario: fila.nombre_usuario,
       clave: '',
     };
+    this.formularioEnviado.set(false);
     this.popupAbierto.set(true);
   }
 
   cerrarPopup(): void {
     this.popupAbierto.set(false);
+    this.formularioEnviado.set(false);
+  }
+
+  cerrarDialogos(): void {
+    this.cerrarPopup();
+    this.pendienteEliminar.set(null);
+  }
+
+  irAPagina(pagina: number): void {
+    this.paginaActual.set(Math.min(Math.max(pagina, 1), this.totalPaginas()));
+  }
+
+  idCorto(id: string): string {
+    return `${id.slice(0, 8)}...${id.slice(-4)}`;
+  }
+
+  async copiarId(id: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(id);
+      this.avisar('ID copiado al portapapeles');
+    } catch {
+      this.avisar('No se pudo copiar el ID en este navegador', true);
+    }
   }
 
   guardar(): void {
+    this.formularioEnviado.set(true);
     if (!this.formularioValido()) {
       this.avisar('Completa nombre, apellido, usuario y, al crear, la clave.', true);
       return;
@@ -105,18 +149,22 @@ export class Usuarios implements OnInit {
   }
 
   eliminar(fila: Usuario): void {
-    const confirmar = confirm(`Eliminar a ${fila.nombre_usuario}?`);
-    if (!confirmar) {
-      return;
-    }
+    this.pendienteEliminar.set(fila);
+  }
+
+  confirmarEliminar(): void {
+    const fila = this.pendienteEliminar();
+    if (!fila) return;
 
     this.cargando.set(true);
     this.usuarioService.eliminar(fila.id_usuario).subscribe({
       next: () => {
+        this.pendienteEliminar.set(null);
         this.avisar('Usuario eliminado');
         this.refrescar();
       },
       error: (error: HttpErrorResponse) => {
+        this.pendienteEliminar.set(null);
         this.avisar(this.textoError(error, false), true);
         this.cargando.set(false);
       },
@@ -129,7 +177,7 @@ export class Usuarios implements OnInit {
       next: (respuesta) => {
         const filas = respuesta.data ?? [];
         this.filas.set(filas);
-        this.avisar(filas.length ? '' : 'No hay registros');
+        this.paginaActual.set(1);
         this.cargando.set(false);
       },
       error: (error: HttpErrorResponse) => {
@@ -200,6 +248,10 @@ export class Usuarios implements OnInit {
   private avisar(texto: string, error = false): void {
     this.mensaje.set(texto);
     this.esError.set(error && texto.length > 0);
+    window.clearTimeout(this.avisoTimeout);
+    if (texto) {
+      this.avisoTimeout = window.setTimeout(() => this.mensaje.set(''), 3500);
+    }
   }
 
   private textoError(error: HttpErrorResponse, alListar: boolean): string {
