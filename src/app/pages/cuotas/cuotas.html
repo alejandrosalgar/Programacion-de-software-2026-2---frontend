@@ -1,0 +1,104 @@
+<header class="crud-barra">
+  <h2>Cuotas</h2>
+
+  <form class="filtro" (submit)="$event.preventDefault(); buscarPorId()">
+    <input
+      [(ngModel)]="idFiltro"
+      name="idFiltro"
+      placeholder="Filtrar por ID"
+      autocomplete="off"
+    />
+    <button type="submit" [disabled]="cargando()">Buscar</button>
+    <button type="button" class="secundario" (click)="limpiarFiltro()" [disabled]="cargando()">
+      Todos
+    </button>
+  </form>
+
+  <button type="button" (click)="abrirCrear()">+ Crear</button>
+</header>
+
+@if (mensaje()) {
+  <p class="mensaje" [class.error]="esError()" role="status">{{ mensaje() }}</p>
+}
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Prestamo</th>
+      <th>Numero</th>
+      <th>Valor</th>
+      <th>Vencimiento</th>
+      <th>Estado</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (cuota of filas(); track cuota.id_cuota) {
+      <tr>
+        <td class="id">{{ cuota.id_cuota }}</td>
+        <td>{{ cuota.id_prestamo }}</td>
+        <td>{{ cuota.numero_cuota }}</td>
+        <td>{{ cuota.valor }}</td>
+        <td>{{ cuota.fecha_vencimiento }}</td>
+        <td>{{ cuota.estado }}</td>
+        <td class="acciones">
+          <button type="button" (click)="abrirEditar(cuota)">Editar</button>
+          <button type="button" class="peligro" (click)="eliminar(cuota)">Eliminar</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+@if (popupAbierto()) {
+  <div class="fondo-popup" (click)="cerrarPopup()">
+    <form class="popup" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+      <h3>{{ modo() === 'crear' ? 'Crear cuota' : 'Editar cuota' }}</h3>
+
+      <label class="campo">
+        <span>ID del prestamo</span>
+        <input [(ngModel)]="formulario.id_prestamo" name="id_prestamo" required />
+      </label>
+      <label class="campo">
+        <span>Numero de cuota</span>
+        <input
+          [(ngModel)]="formulario.numero_cuota"
+          name="numero_cuota"
+          type="number"
+          min="1"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>Valor</span>
+        <input
+          [(ngModel)]="formulario.valor"
+          name="valor"
+          type="number"
+          min="0.01"
+          step="0.01"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>Fecha de vencimiento</span>
+        <input
+          [(ngModel)]="formulario.fecha_vencimiento"
+          name="fecha_vencimiento"
+          type="date"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>Estado</span>
+        <input [(ngModel)]="formulario.estado" name="estado" required />
+      </label>
+
+      <div class="popup-acciones">
+        <button type="button" class="secundario" (click)="cerrarPopup()">Cancelar</button>
+        <button type="submit" [disabled]="cargando()">Guardar</button>
+      </div>
+    </form>
+  </div>
+}

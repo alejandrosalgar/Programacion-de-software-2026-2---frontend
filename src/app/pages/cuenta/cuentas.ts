@@ -2,21 +2,21 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { Usuario, UsuarioCreate, UsuarioUpdate } from '../../models/usuario.model';
-import { UsuarioService } from '../../services/usuario.service';
+import { Cuenta, CuentaCreate, CuentaUpdate } from '../../models/cuenta.model';
+import { CuentaService } from '../../services/cuenta.service';
 
 type ModoPopup = 'crear' | 'editar';
 
 @Component({
   selector: 'app-cuenta',
   imports: [FormsModule],
-  templateUrl: './cuenta.html',
-  styleUrl: './cuenta.css',
+  templateUrl: './cuentas.html',
+  styleUrl: './cuentas.css',
 })
-export class Usuarios implements OnInit {
-  private readonly usuarioService = inject(UsuarioService);
+export class Cuentas implements OnInit {
+  private readonly cuentaService = inject(CuentaService);
 
-  readonly filas = signal<Usuario[]>([]);
+  readonly filas = signal<Cuenta[]>([]);
   readonly mensaje = signal('');
   readonly esError = signal(false);
   readonly cargando = signal(false);
@@ -24,7 +24,8 @@ export class Usuarios implements OnInit {
   readonly modo = signal<ModoPopup>('crear');
 
   idFiltro = '';
-  formulario: UsuarioCreate = this.formularioVacio();
+  formulario: CuentaCreate = this.formularioVacio();
+  idUsuarioEdicion = '';
   private idEditando = '';
 
   ngOnInit(): void {
@@ -39,9 +40,9 @@ export class Usuarios implements OnInit {
     }
 
     this.cargando.set(true);
-    this.usuarioService.obtener(id).subscribe({
-      next: (usuario) => {
-        this.filas.set([usuario]);
+    this.cuentaService.obtener(id).subscribe({
+      next: (cuenta) => {
+        this.filas.set([cuenta]);
         this.avisar('');
         this.cargando.set(false);
       },
@@ -61,21 +62,23 @@ export class Usuarios implements OnInit {
   abrirCrear(): void {
     this.modo.set('crear');
     this.idEditando = '';
+    this.idUsuarioEdicion = '';
     this.formulario = this.formularioVacio();
     this.popupAbierto.set(true);
   }
 
-  abrirEditar(fila: Usuario): void {
+  abrirEditar(cuenta: Cuenta): void {
     this.modo.set('editar');
-    this.idEditando = fila.id_usuario;
+    this.idEditando = cuenta.id_cuenta;
     this.formulario = {
-      primer_nombre: fila.primer_nombre,
-      segundo_nombre: fila.segundo_nombre,
-      primer_apellido: fila.primer_apellido,
-      segundo_apellido: fila.segundo_apellido,
-      nombre_usuario: fila.nombre_usuario,
-      clave: '',
+      numero_cuenta: cuenta.numero_cuenta,
+      id_usuario: cuenta.id_usuario,
+      id_usuario_creacion: cuenta.id_usuario_creacion,
+      id_tipo_cuenta: cuenta.id_tipo_cuenta,
+      saldo: cuenta.saldo,
+      estado: cuenta.estado,
     };
+    this.idUsuarioEdicion = '';
     this.popupAbierto.set(true);
   }
 
@@ -85,35 +88,35 @@ export class Usuarios implements OnInit {
 
   guardar(): void {
     if (!this.formularioValido()) {
-      this.avisar('Completa nombre, apellido, usuario y, al crear, la clave.', true);
+      this.avisar('Completa los datos requeridos y verifica los UUID.', true);
       return;
     }
 
     this.cargando.set(true);
     if (this.modo() === 'crear') {
-      this.usuarioService.crear(this.formulario).subscribe({
-        next: () => this.despuesDeGuardar('Usuario creado'),
+      this.cuentaService.crear(this.datosCreacion()).subscribe({
+        next: () => this.despuesDeGuardar('Cuenta creada'),
         error: (error: HttpErrorResponse) => this.falloGuardar(error),
       });
       return;
     }
 
-    this.usuarioService.actualizar(this.idEditando, this.datosEdicion()).subscribe({
-      next: () => this.despuesDeGuardar('Usuario actualizado'),
+    this.cuentaService.actualizar(this.idEditando, this.datosEdicion()).subscribe({
+      next: () => this.despuesDeGuardar('Cuenta actualizada'),
       error: (error: HttpErrorResponse) => this.falloGuardar(error),
     });
   }
 
-  eliminar(fila: Usuario): void {
-    const confirmar = confirm(`Eliminar a ${fila.nombre_usuario}?`);
+  eliminar(cuenta: Cuenta): void {
+    const confirmar = confirm(`Eliminar la cuenta ${cuenta.numero_cuenta}?`);
     if (!confirmar) {
       return;
     }
 
     this.cargando.set(true);
-    this.usuarioService.eliminar(fila.id_usuario).subscribe({
+    this.cuentaService.eliminar(cuenta.id_cuenta).subscribe({
       next: () => {
-        this.avisar('Usuario eliminado');
+        this.avisar('Cuenta eliminada');
         this.refrescar();
       },
       error: (error: HttpErrorResponse) => {
@@ -125,17 +128,17 @@ export class Usuarios implements OnInit {
 
   private cargarTodos(): void {
     this.cargando.set(true);
-    this.usuarioService.listar().subscribe({
+    this.cuentaService.listar().subscribe({
       next: (respuesta) => {
         const filas = respuesta.data ?? [];
         this.filas.set(filas);
-        this.avisar(filas.length ? '' : 'No hay registros');
+        this.avisar(filas.length ? '' : 'No hay cuentas');
         this.cargando.set(false);
       },
       error: (error: HttpErrorResponse) => {
         this.filas.set([]);
         const listaVacia = error.status === 404;
-        this.avisar(listaVacia ? 'No hay registros' : this.textoError(error, true), !listaVacia);
+        this.avisar(listaVacia ? 'No hay cuentas' : this.textoError(error, true), !listaVacia);
         this.cargando.set(false);
       },
     });
@@ -163,37 +166,46 @@ export class Usuarios implements OnInit {
   private formularioValido(): boolean {
     const datos = this.formulario;
     const base =
-      datos.primer_nombre.trim() &&
-      datos.primer_apellido.trim() &&
-      datos.nombre_usuario.trim();
+      datos.numero_cuenta.trim() &&
+      datos.id_usuario.trim() &&
+      datos.id_usuario_creacion.trim() &&
+      (datos.saldo ?? 0) >= 0;
     if (this.modo() === 'crear') {
-      return Boolean(base && datos.clave.trim());
+      return Boolean(base);
     }
-    return Boolean(base);
+    return Boolean(base && this.idUsuarioEdicion.trim());
   }
 
-  private datosEdicion(): UsuarioUpdate {
-    const datos: UsuarioUpdate = {
-      primer_nombre: this.formulario.primer_nombre.trim(),
-      segundo_nombre: this.formulario.segundo_nombre.trim(),
-      primer_apellido: this.formulario.primer_apellido.trim(),
-      segundo_apellido: this.formulario.segundo_apellido.trim(),
-      nombre_usuario: this.formulario.nombre_usuario.trim(),
-    };
-    if (this.formulario.clave.trim()) {
-      datos.clave = this.formulario.clave;
-    }
-    return datos;
-  }
-
-  private formularioVacio(): UsuarioCreate {
+  private datosCreacion(): CuentaCreate {
     return {
-      primer_nombre: '',
-      segundo_nombre: '',
-      primer_apellido: '',
-      segundo_apellido: '',
-      nombre_usuario: '',
-      clave: '',
+      numero_cuenta: this.formulario.numero_cuenta.trim(),
+      id_usuario: this.formulario.id_usuario.trim(),
+      id_usuario_creacion: this.formulario.id_usuario_creacion.trim(),
+      id_tipo_cuenta: this.formulario.id_tipo_cuenta?.trim() || null,
+      saldo: this.formulario.saldo ?? 0,
+      estado: this.formulario.estado?.trim() || 'Activa',
+    };
+  }
+
+  private datosEdicion(): CuentaUpdate {
+    return {
+      numero_cuenta: this.formulario.numero_cuenta.trim(),
+      id_usuario: this.formulario.id_usuario.trim(),
+      id_usuario_edicion: this.idUsuarioEdicion.trim(),
+      id_tipo_cuenta: this.formulario.id_tipo_cuenta?.trim() || null,
+      saldo: this.formulario.saldo ?? 0,
+      estado: this.formulario.estado?.trim() || 'Activa',
+    };
+  }
+
+  private formularioVacio(): CuentaCreate {
+    return {
+      numero_cuenta: '',
+      id_usuario: '',
+      id_usuario_creacion: '',
+      id_tipo_cuenta: null,
+      saldo: 0,
+      estado: 'Activa',
     };
   }
 
@@ -207,13 +219,13 @@ export class Usuarios implements OnInit {
       return 'No se pudo conectar con la API. Revisa que el backend este en el puerto 8000.';
     }
     if (error.status === 404) {
-      return alListar ? 'No hay registros' : 'No encontrado';
+      return alListar ? 'No hay cuentas' : 'Cuenta no encontrada';
     }
     if (error.status === 409) {
-      return 'Ese nombre de usuario ya existe';
+      return 'Ese numero de cuenta ya existe';
     }
     if (error.status === 422) {
-      return 'Revisa los datos. El filtro por ID tiene que ser un UUID.';
+      return 'Revisa los datos y que los identificadores tengan formato UUID.';
     }
     const detail = error.error?.detail;
     if (typeof detail === 'string') {
