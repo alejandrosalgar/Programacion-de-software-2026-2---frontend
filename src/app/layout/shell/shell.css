@@ -1,4 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
 :host {
   display: block;
-  min-height: 100vh;
+  font-family: 'DM Sans', system-ui, sans-serif;
 }
+
+/* ---------- Estructura: sidebar + contenido ---------- */
+.app {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  min-height: 100vh;
+  background: #f3f6fb;
+  transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app.retraido {
+  grid-template-columns: 76px minmax(0, 1fr);
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #0b1b3a, #13306b);
+  box-shadow: 4px 0 24px rgba(11, 27, 58, 0.25);
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 72px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.logo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  color: #06122b;
+  background: #3b82f6;
+  border-radius: 12px;
+}
+
+.marca {
+  flex: 1;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.alternar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: #dbeafe;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.alternar:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- Opciones del menu ---------- */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+
+.nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  color: #e2e8f0;
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: 12px;
+  transition: background 0.15s;
+}
+
+.nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sigla {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #dbeafe;
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+}
+
+.nav a.activo {
+  background: rgba(59, 130, 246, 0.18);
+  box-shadow: inset 3px 0 0 #60a5fa;
+}
+
+.nav a.activo .sigla {
+  color: #06122b;
+  background: #3b82f6;
+}
+
+/* ---------- Estado retraido ---------- */
+.retraido .marca,
+.retraido .logo,
+.retraido .texto {
+  display: none;
+}
+
+.retraido .cabecera {
+  justify-content: center;
+  padding: 0;
+}
+
+.retraido .nav a {
+  justify-content: center;
+}
+
+/* ---------- Contenido ---------- */
+.contenido {
+  min-width: 0;
+  overflow-x: auto;
+  padding: 32px 28px 56px;
+}
+
+
+

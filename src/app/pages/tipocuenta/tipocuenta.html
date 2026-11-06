@@ -1,0 +1,122 @@
+<header class="crud-barra">
+  <h2>Tipos de cuenta</h2>
+
+  <form class="filtro" (submit)="$event.preventDefault(); buscarPorId()">
+    <input
+      [(ngModel)]="idFiltro"
+      name="idFiltro"
+      placeholder="Filtrar por ID"
+      autocomplete="off"
+    />
+    <button type="submit" [disabled]="cargando()">Buscar</button>
+    <button type="button" class="secundario" (click)="limpiarFiltro()" [disabled]="cargando()">
+      Todos
+    </button>
+  </form>
+
+  <button type="button" (click)="abrirCrear()">+ Crear</button>
+</header>
+
+@if (mensaje()) {
+  <p class="mensaje" [class.error]="esError()">{{ mensaje() }}</p>
+}
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nombre</th>
+      <th>Descripcion</th>
+      <th>Tasa de interes</th>
+      <th>Monto minimo</th>
+      <th>Mantenimiento</th>
+      <th>Estado</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (fila of filas(); track fila.id_tipo_cuenta) {
+      <tr>
+        <td class="id">{{ fila.id_tipo_cuenta }}</td>
+        <td>{{ fila.nombre }}</td>
+        <td>{{ fila.descripcion }}</td>
+        <td>{{ fila.tasa_interes }}</td>
+        <td>{{ fila.monto_minimo_apertura }}</td>
+        <td>{{ fila.requiere_mantenimiento ? 'Si' : 'No' }}</td>
+        <td>{{ fila.estado }}</td>
+        <td class="acciones">
+          <button type="button" (click)="abrirEditar(fila)">Editar</button>
+          <button type="button" class="peligro" (click)="eliminar(fila)">Eliminar</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+@if (popupAbierto()) {
+  <div class="fondo-popup" (click)="cerrarPopup()">
+    <form class="popup" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+      <h3>{{ modo() === 'crear' ? 'Crear tipo de cuenta' : 'Editar tipo de cuenta' }}</h3>
+
+      <label class="campo">
+        <span>Nombre</span>
+        <input [(ngModel)]="formulario.nombre" name="nombre" required />
+      </label>
+      <label class="campo">
+        <span>Descripcion</span>
+        <input [(ngModel)]="formulario.descripcion" name="descripcion" />
+      </label>
+      <label class="campo">
+        <span>Tasa de interes</span>
+        <input
+          [(ngModel)]="formulario.tasa_interes"
+          name="tasa_interes"
+          type="number"
+          step="0.01"
+          min="0"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>Monto minimo de apertura</span>
+        <input
+          [(ngModel)]="formulario.monto_minimo_apertura"
+          name="monto_minimo_apertura"
+          type="number"
+          step="0.01"
+          min="0"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>Requiere mantenimiento</span>
+        <input
+          [(ngModel)]="formulario.requiere_mantenimiento"
+          name="requiere_mantenimiento"
+          type="checkbox"
+        />
+      </label>
+      <label class="campo">
+        <span>Estado</span>
+        <input [(ngModel)]="formulario.estado" name="estado" required />
+      </label>
+      <label class="campo">
+        <span>{{
+          modo() === 'crear' ? 'UUID del usuario que crea' : 'UUID del usuario que edita (opcional)'
+        }}</span>
+        <input
+          [(ngModel)]="idUsuario"
+          name="idUsuario"
+          autocomplete="off"
+          [required]="modo() === 'crear'"
+        />
+      </label>
+
+      <div class="popup-acciones">
+        <button type="button" class="secundario" (click)="cerrarPopup()">Cancelar</button>
+        <button type="submit" [disabled]="cargando()">Guardar</button>
+      </div>
+    </form>
+  </div>
+}
+
