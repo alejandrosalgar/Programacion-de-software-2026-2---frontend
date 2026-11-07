@@ -1,0 +1,80 @@
+<header class="crud-barra">
+  <h2>Sucursales</h2>
+
+  <form class="filtro" (submit)="$event.preventDefault(); buscarPorId()">
+    <input
+      [(ngModel)]="idFiltro"
+      name="idFiltro"
+      placeholder="Filtrar por ID"
+      autocomplete="off"
+    />
+    <button type="submit" [disabled]="cargando()">Buscar</button>
+    <button type="button" class="secundario" (click)="limpiarFiltro()" [disabled]="cargando()">
+      Todos
+    </button>
+  </form>
+
+  <button type="button" (click)="abrirCrear()">+ Crear</button>
+</header>
+
+@if (mensaje()) {
+  <p class="mensaje" [class.error]="esError()" role="status">{{ mensaje() }}</p>
+}
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nombre</th>
+      <th>Direccion</th>
+      <th>Ciudad</th>
+      <th>Telefono</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (sucursal of filas(); track sucursal.id_sucursal) {
+      <tr>
+        <td class="id">{{ sucursal.id_sucursal }}</td>
+        <td>{{ sucursal.nombre }}</td>
+        <td>{{ sucursal.direccion }}</td>
+        <td>{{ sucursal.ciudad }}</td>
+        <td>{{ sucursal.telefono }}</td>
+        <td class="acciones">
+          <button type="button" (click)="abrirEditar(sucursal)">Editar</button>
+          <button type="button" class="peligro" (click)="eliminar(sucursal)">Eliminar</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+@if (popupAbierto()) {
+  <div class="fondo-popup" (click)="cerrarPopup()">
+    <form class="popup" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+      <h3>{{ modo() === 'crear' ? 'Crear sucursal' : 'Editar sucursal' }}</h3>
+
+      <label class="campo">
+        <span>Nombre</span>
+        <input [(ngModel)]="formulario.nombre" name="nombre" required />
+      </label>
+      <label class="campo">
+        <span>Direccion</span>
+        <input [(ngModel)]="formulario.direccion" name="direccion" required />
+      </label>
+      <label class="campo">
+        <span>Ciudad</span>
+        <input [(ngModel)]="formulario.ciudad" name="ciudad" required />
+      </label>
+      <label class="campo">
+        <span>Telefono</span>
+        <input [(ngModel)]="formulario.telefono" name="telefono" required />
+      </label>
+
+      <div class="popup-acciones">
+        <button type="button" class="secundario" (click)="cerrarPopup()">Cancelar</button>
+        <button type="submit" [disabled]="cargando()">Guardar</button>
+      </div>
+    </form>
+  </div>
+}
