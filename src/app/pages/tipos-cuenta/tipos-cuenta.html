@@ -1,0 +1,62 @@
+<section class="entidad-pagina">
+  <header class="encabezado-entidad">
+    <div><p class="sobretitulo-entidad">Productos financieros</p><h1>Tipos de cuenta</h1><p>Configura las condiciones y tarifas de las cuentas bancarias.</p></div>
+    <button class="accion-principal" type="button" (click)="abrirCrear()">+ Crear tipo</button>
+  </header>
+
+  <section class="panel-entidad" aria-label="Listado de tipos de cuenta">
+    <div class="barra-entidad">
+      <form class="busqueda-entidad" (submit)="$event.preventDefault(); buscarPorId()">
+        <label for="filtro-tipo">Filtrar por ID</label>
+        <input id="filtro-tipo" [(ngModel)]="idFiltro" name="idFiltro" placeholder="UUID del tipo de cuenta" autocomplete="off" />
+        <button type="submit" [disabled]="cargando()">Buscar</button>
+        <button class="boton-neutro" type="button" (click)="limpiarFiltro()" [disabled]="cargando()">Ver todos</button>
+      </form>
+      <span class="contador-entidad">{{ filas().length }} tipos</span>
+    </div>
+
+    @if (mensaje()) { <p class="mensaje" [class.error]="esError()" role="status">{{ mensaje() }}</p> }
+
+    <div class="tabla-scroll">
+      <table class="tabla-entidad">
+        <thead><tr><th>Nombre</th><th>Descripción</th><th>Tasa</th><th>Monto mínimo</th><th>Mantenimiento</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          @if (cargando() && !filas().length) { <tr><td class="sin-datos" colspan="7">Cargando tipos de cuenta...</td></tr> }
+          @else if (!filas().length) { <tr><td class="sin-datos" colspan="7">No hay tipos de cuenta registrados.</td></tr> }
+          @else {
+            @for (tipo of filas(); track tipo.id_tipo_cuenta) {
+              <tr>
+                <td class="dato-principal">{{ tipo.nombre }}</td>
+                <td>{{ tipo.descripcion || '—' }}</td>
+                <td>{{ tipo.tasa_interes }}%</td>
+                <td>{{ tipo.monto_minimo_apertura | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                <td>{{ tipo.requiere_mantenimiento ? 'Sí' : 'No' }}</td>
+                <td><span class="estado-etiqueta">{{ tipo.estado }}</span></td>
+                <td class="acciones-celda"><button type="button" (click)="abrirEditar(tipo)">Editar</button><button type="button" class="boton-peligro" (click)="eliminar(tipo)">Eliminar</button></td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+@if (popupAbierto()) {
+  <div class="fondo-popup" (click)="cerrarPopup()">
+    <form class="popup formulario-entidad" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+      <h2>{{ modo() === 'crear' ? 'Crear tipo de cuenta' : 'Editar tipo de cuenta' }}</h2>
+      <div class="campos-entidad">
+        <label><span>Nombre</span><input [(ngModel)]="formulario.nombre" name="nombre" maxlength="80" required /></label>
+        <label><span>Tasa de interés (%)</span><input [(ngModel)]="formulario.tasa_interes" name="tasa_interes" type="number" min="0" step="0.01" required /></label>
+        <label class="campo-ancho"><span>Descripción</span><textarea [(ngModel)]="formulario.descripcion" name="descripcion" maxlength="255" rows="3"></textarea></label>
+        <label><span>Monto mínimo de apertura</span><input [(ngModel)]="formulario.monto_minimo_apertura" name="monto_minimo_apertura" type="number" min="0" step="1000" required /></label>
+        <label><span>Estado</span><select [(ngModel)]="formulario.estado" name="estado"><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select></label>
+        <label class="opcion-check campo-ancho"><input [(ngModel)]="formulario.requiere_mantenimiento" name="requiere_mantenimiento" type="checkbox" /><span>Requiere cuota de mantenimiento</span></label>
+        @if (modo() === 'crear') { <label class="campo-ancho"><span>ID de usuario creador</span><input [(ngModel)]="formulario.id_usuario_creacion" name="id_usuario_creacion" required /></label> }
+        @if (modo() === 'editar') { <label class="campo-ancho"><span>ID de usuario que edita (opcional)</span><input [(ngModel)]="idUsuarioEdicion" name="id_usuario_edicion" /></label> }
+      </div>
+      <div class="acciones-formulario"><button class="boton-neutro" type="button" (click)="cerrarPopup()">Cancelar</button><button type="submit" [disabled]="cargando()">{{ cargando() ? 'Guardando...' : 'Guardar tipo' }}</button></div>
+    </form>
+  </div>
+}

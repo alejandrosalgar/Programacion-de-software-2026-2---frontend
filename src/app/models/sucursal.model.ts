@@ -23,5 +23,5 @@ export interface SucursalUpdate {
   direccion?: string;
   ciudad?: string;
   telefono?: string;
-  id_usuario_creacion?: string | null;
+  id_usuario_edicion?: string | null;
 }

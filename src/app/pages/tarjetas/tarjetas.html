@@ -1,0 +1,63 @@
+<section class="entidad-pagina">
+  <header class="encabezado-entidad">
+    <div><p class="sobretitulo-entidad">Productos financieros</p><h1>Tarjetas</h1><p>Administra tarjetas débito y crédito asociadas a cuentas.</p></div>
+    <button class="accion-principal" type="button" (click)="abrirCrear()">+ Crear tarjeta</button>
+  </header>
+
+  <section class="panel-entidad" aria-label="Listado de tarjetas">
+    <div class="barra-entidad">
+      <form class="busqueda-entidad" (submit)="$event.preventDefault(); buscarPorId()">
+        <label for="filtro-tarjeta">Filtrar por ID de tarjeta</label>
+        <input id="filtro-tarjeta" [(ngModel)]="idFiltro" name="idFiltro" placeholder="UUID de tarjeta" autocomplete="off" />
+        <button type="submit" [disabled]="cargando()">Buscar</button>
+        <button class="boton-neutro" type="button" (click)="limpiarFiltro()" [disabled]="cargando()">Ver todas</button>
+      </form>
+      <span class="contador-entidad">{{ filas().length }} tarjetas</span>
+    </div>
+
+    @if (mensaje()) { <p class="mensaje" [class.error]="esError()" role="status">{{ mensaje() }}</p> }
+
+    <div class="tabla-scroll">
+      <table class="tabla-entidad">
+        <thead><tr><th>Número</th><th>Tipo</th><th>ID de cuenta</th><th>Vencimiento</th><th>Límite</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          @if (cargando() && !filas().length) { <tr><td class="sin-datos" colspan="7">Cargando tarjetas...</td></tr> }
+          @else if (!filas().length) { <tr><td class="sin-datos" colspan="7">No hay tarjetas para mostrar.</td></tr> }
+          @else {
+            @for (tarjeta of filas(); track tarjeta.id_tarjeta) {
+              <tr>
+                <td class="dato-principal">{{ numeroVisible(tarjeta.numero_tarjeta) }}</td>
+                <td>{{ tarjeta.tipo_tarjeta }}</td>
+                <td class="uuid-celda" [title]="tarjeta.id_cuenta">{{ tarjeta.id_cuenta }}</td>
+                <td>{{ tarjeta.fecha_vencimiento }}</td>
+                <td>{{ tarjeta.limite_credito | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                <td><span class="estado-etiqueta">{{ tarjeta.estado }}</span></td>
+                <td class="acciones-celda"><button type="button" (click)="abrirEditar(tarjeta)">Editar</button><button type="button" class="boton-peligro" (click)="eliminar(tarjeta)">Eliminar</button></td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+@if (popupAbierto()) {
+  <div class="fondo-popup" (click)="cerrarPopup()">
+    <form class="popup formulario-entidad" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+      <h2>{{ modo() === 'crear' ? 'Crear tarjeta' : 'Editar tarjeta' }}</h2>
+      <div class="campos-entidad">
+        <label><span>ID de cuenta</span><input [(ngModel)]="formulario.id_cuenta" name="id_cuenta" required /></label>
+        <label><span>Número de tarjeta</span><input [(ngModel)]="formulario.numero_tarjeta" name="numero_tarjeta" inputmode="numeric" maxlength="19" required /></label>
+        <label><span>Tipo</span><select [(ngModel)]="formulario.tipo_tarjeta" name="tipo_tarjeta"><option value="Debito">Débito</option><option value="Credito">Crédito</option></select></label>
+        <label><span>Fecha de emisión</span><input [(ngModel)]="formulario.fecha_emision" name="fecha_emision" type="date" required /></label>
+        <label><span>Fecha de vencimiento</span><input [(ngModel)]="formulario.fecha_vencimiento" name="fecha_vencimiento" type="date" required /></label>
+        <label><span>CVV {{ modo() === 'editar' ? '(vacío para conservar)' : '' }}</span><input [(ngModel)]="formulario.cvv" name="cvv" type="password" inputmode="numeric" maxlength="4" [required]="modo() === 'crear'" autocomplete="new-password" /></label>
+        <label><span>Límite de crédito</span><input [(ngModel)]="formulario.limite_credito" name="limite_credito" type="number" min="0" step="1000" required /></label>
+        <label><span>Estado</span><select [(ngModel)]="formulario.estado" name="estado"><option value="Activa">Activa</option><option value="Bloqueada">Bloqueada</option><option value="Vencida">Vencida</option></select></label>
+        @if (modo() === 'crear') { <label class="campo-ancho"><span>ID de usuario creador</span><input [(ngModel)]="formulario.id_usuario_creacion" name="id_usuario_creacion" required /></label> }
+      </div>
+      <div class="acciones-formulario"><button class="boton-neutro" type="button" (click)="cerrarPopup()">Cancelar</button><button type="submit" [disabled]="cargando()">{{ cargando() ? 'Guardando...' : 'Guardar tarjeta' }}</button></div>
+    </form>
+  </div>
+}

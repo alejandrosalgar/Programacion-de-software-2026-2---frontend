@@ -180,7 +180,13 @@ export class Cuotas implements OnInit {
   }
 
   private datosEdicion(): CuotaUpdate {
-    return this.datosFormulario();
+    return {
+      id_prestamo: this.formulario.id_prestamo.trim(),
+      valor: this.formulario.valor,
+      numero_cuota: this.formulario.numero_cuota,
+      fecha_vencimiento: this.formulario.fecha_vencimiento,
+      estado: this.formulario.estado?.trim() || 'pendiente',
+    };
   }
 
   private formularioVacio(): CuotaCreate {
