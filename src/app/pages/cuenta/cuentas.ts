@@ -218,18 +218,18 @@ export class Cuentas implements OnInit {
     if (error.status === 0) {
       return 'No se pudo conectar con la API. Revisa que el backend este en el puerto 8000.';
     }
+    const detail = error.error?.detail;
+    if (typeof detail === 'string') {
+      return detail;
+    }
     if (error.status === 404) {
       return alListar ? 'No hay cuentas' : 'Cuenta no encontrada';
     }
     if (error.status === 409) {
-      return 'Ese numero de cuenta ya existe';
+      return 'Ese numero de cuenta ya existe o tiene registros asociados';
     }
     if (error.status === 422) {
       return 'Revisa los datos y que los identificadores tengan formato UUID.';
-    }
-    const detail = error.error?.detail;
-    if (typeof detail === 'string') {
-      return detail;
     }
     return 'No se pudo completar la operacion';
   }
