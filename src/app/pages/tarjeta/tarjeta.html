@@ -1,0 +1,149 @@
+<header class="crud-barra">
+  <h2>Tarjetas</h2>
+
+  <form class="filtro" (submit)="$event.preventDefault(); buscarPorId()">
+    <input
+      [(ngModel)]="idFiltro"
+      name="idFiltro"
+      placeholder="Filtrar por ID"
+      autocomplete="off"
+    />
+    <button type="submit" [disabled]="cargando()">Buscar</button>
+    <button type="button" class="secundario" (click)="limpiarFiltro()" [disabled]="cargando()">
+      Todos
+    </button>
+  </form>
+
+  <button type="button" (click)="abrirCrear()">+ Crear</button>
+</header>
+
+@if (mensaje()) {
+  <p class="mensaje" [class.error]="esError()">{{ mensaje() }}</p>
+}
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Cuenta</th>
+      <th>Numero</th>
+      <th>Tipo</th>
+      <th>Emision</th>
+      <th>Vencimiento</th>
+      <th>Limite de credito</th>
+      <th>Estado</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (fila of filas(); track fila.id_tarjeta) {
+      <tr>
+        <td class="id">{{ fila.id_tarjeta }}</td>
+        <td class="id">{{ fila.id_cuenta }}</td>
+        <td>{{ fila.numero_tarjeta }}</td>
+        <td>{{ fila.tipo_tarjeta }}</td>
+        <td>{{ fila.fecha_emision }}</td>
+        <td>{{ fila.fecha_vencimiento }}</td>
+        <td>{{ fila.limite_credito }}</td>
+        <td>{{ fila.estado }}</td>
+        <td class="acciones">
+          <button type="button" (click)="abrirEditar(fila)">Editar</button>
+          <button type="button" class="peligro" (click)="eliminar(fila)">Eliminar</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+@if (popupAbierto()) {
+  <div class="fondo-popup" (click)="cerrarPopup()">
+    <form class="popup" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+      <h3>{{ modo() === 'crear' ? 'Crear tarjeta' : 'Editar tarjeta' }}</h3>
+
+      <label class="campo">
+        <span>UUID de la cuenta</span>
+        <input
+          [(ngModel)]="formulario.id_cuenta"
+          name="id_cuenta"
+          autocomplete="off"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>Numero de tarjeta</span>
+        <input
+          [(ngModel)]="formulario.numero_tarjeta"
+          name="numero_tarjeta"
+          autocomplete="off"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>Tipo de tarjeta</span>
+        <input [(ngModel)]="formulario.tipo_tarjeta" name="tipo_tarjeta" required />
+      </label>
+      <label class="campo">
+        <span>Fecha de emision</span>
+        <input
+          [(ngModel)]="formulario.fecha_emision"
+          name="fecha_emision"
+          type="date"
+          [disabled]="modo() === 'editar'"
+          [required]="modo() === 'crear'"
+        />
+      </label>
+      <label class="campo">
+        <span>Fecha de vencimiento</span>
+        <input
+          [(ngModel)]="formulario.fecha_vencimiento"
+          name="fecha_vencimiento"
+          type="date"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>CVV</span>
+        <input
+          [(ngModel)]="formulario.cvv"
+          name="cvv"
+          type="password"
+          maxlength="4"
+          autocomplete="off"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>Limite de credito</span>
+        <input
+          [(ngModel)]="formulario.limite_credito"
+          name="limite_credito"
+          type="number"
+          step="0.01"
+          min="0"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>Estado</span>
+        <input [(ngModel)]="formulario.estado" name="estado" required />
+      </label>
+      <label class="campo">
+        <span>{{
+          modo() === 'crear' ? 'UUID del usuario que crea' : 'UUID del usuario que edita (opcional)'
+        }}</span>
+        <input
+          [(ngModel)]="idUsuario"
+          name="idUsuario"
+          autocomplete="off"
+          [required]="modo() === 'crear'"
+        />
+      </label>
+
+      <div class="popup-acciones">
+        <button type="button" class="secundario" (click)="cerrarPopup()">Cancelar</button>
+        <button type="submit" [disabled]="cargando()">Guardar</button>
+      </div>
+    </form>
+  </div>
+}
+

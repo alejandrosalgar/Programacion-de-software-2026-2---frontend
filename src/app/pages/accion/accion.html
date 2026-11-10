@@ -1,0 +1,96 @@
+<header class="crud-barra">
+  <h2>Acciones</h2>
+
+  <form class="filtro" (submit)="$event.preventDefault(); buscarPorId()">
+    <input
+      [(ngModel)]="idFiltro"
+      name="idFiltro"
+      placeholder="Filtrar por ID"
+      autocomplete="off"
+    />
+    <button type="submit" [disabled]="cargando()">Buscar</button>
+    <button type="button" class="secundario" (click)="limpiarFiltro()" [disabled]="cargando()">
+      Todos
+    </button>
+  </form>
+
+  <button type="button" (click)="abrirCrear()">+ Crear</button>
+</header>
+
+@if (mensaje()) {
+  <p class="mensaje" [class.error]="esError()">{{ mensaje() }}</p>
+}
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Usuario</th>
+      <th>Tipo de accion</th>
+      <th>Descripcion</th>
+      <th>IP de origen</th>
+      <th>Resultado</th>
+      <th>Fecha</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (fila of filas(); track fila.id_accion) {
+      <tr>
+        <td class="id">{{ fila.id_accion }}</td>
+        <td class="id">{{ fila.id_usuario }}</td>
+        <td>{{ fila.tipo_accion }}</td>
+        <td>{{ fila.descripcion }}</td>
+        <td>{{ fila.ip_origen }}</td>
+        <td>{{ fila.resultado }}</td>
+        <td>{{ fila.fecha_accion }}</td>
+        <td class="acciones">
+          <button type="button" (click)="abrirEditar(fila)">Editar</button>
+          <button type="button" class="peligro" (click)="eliminar(fila)">Eliminar</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+@if (popupAbierto()) {
+  <div class="fondo-popup" (click)="cerrarPopup()">
+    <form class="popup" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+      <h3>{{ modo() === 'crear' ? 'Crear accion' : 'Editar accion' }}</h3>
+
+      <label class="campo">
+        <span>UUID del usuario</span>
+        <input
+          [(ngModel)]="formulario.id_usuario"
+          name="id_usuario"
+          autocomplete="off"
+          [disabled]="modo() === 'editar'"
+          [required]="modo() === 'crear'"
+        />
+      </label>
+      <label class="campo">
+        <span>Tipo de accion</span>
+        <input [(ngModel)]="formulario.tipo_accion" name="tipo_accion" required />
+      </label>
+      <label class="campo">
+        <span>Descripcion</span>
+        <input [(ngModel)]="formulario.descripcion" name="descripcion" />
+      </label>
+      <label class="campo">
+        <span>IP de origen</span>
+        <input [(ngModel)]="formulario.ip_origen" name="ip_origen" autocomplete="off" />
+      </label>
+      <label class="campo">
+        <span>Resultado</span>
+        <input [(ngModel)]="formulario.resultado" name="resultado" required />
+      </label>
+
+      <div class="popup-acciones">
+        <button type="button" class="secundario" (click)="cerrarPopup()">Cancelar</button>
+        <button type="submit" [disabled]="cargando()">Guardar</button>
+      </div>
+    </form>
+  </div>
+}
+
+

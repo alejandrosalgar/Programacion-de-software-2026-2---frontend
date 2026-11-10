@@ -1,11 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap');
+
 :root {
-  --sidebar: #0f2744;
-  --sidebar-activo: #1d4e89;
-  --fondo: #f4f6f8;
-  --borde: #d5dde6;
-  --texto: #1c2833;
-  --peligro: #9b2335;
-  --primario: #1d4e89;
+  --midnight-950: #0b1118;
+  --midnight-900: #121d28;
+  --midnight-800: #1c2a37;
+  --slate-700: #d3dce4;
+  --slate-600: #a8b5c1;
+  --slate-500: #8292a0;
+  --slate-300: #526676;
+  --slate-200: #344957;
+  --slate-100: #23313d;
+  --white: #f5f8fb;
+  --accent: #65b8f3;
+  --accent-soft: #172e41;
+  --success: #76c5ed;
+  --success-soft: #172e41;
+  --danger: #f08088;
+  --danger-strong: #923841;
+  --danger-soft: #39262b;
+  --surface: #17232e;
+  --page: #0d151e;
+  --text: #ecf2f6;
+  --muted: #9caab7;
+  --border: #344b5c;
+  --reflective-border: rgb(101 184 243 / 38%);
+  --reflective-glow: 0 0 0 1px rgb(101 184 243 / 12%), inset 0 1px rgb(255 255 255 / 8%), 0 8px 24px rgb(0 0 0 / 22%);
+  --shadow: 0 14px 40px rgb(0 0 0 / 42%);
 }
 
 * {
@@ -16,75 +36,9 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  font-family: "Segoe UI", sans-serif;
-  color: var(--texto);
-  background: var(--fondo);
-}
-
-.layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-.sidebar {
-  width: 240px;
-  flex-shrink: 0;
-  background: var(--sidebar);
-  color: #fff;
-  padding: 24px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.sidebar h1 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.sidebar nav {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sidebar a {
-  color: #d6e4f5;
-  text-decoration: none;
-  padding: 10px 12px;
-  border-radius: 8px;
-}
-
-.sidebar a.activo,
-.sidebar a:hover {
-  background: var(--sidebar-activo);
-  color: #fff;
-}
-
-.contenido {
-  flex: 1;
-  padding: 28px;
-  overflow: auto;
-}
-
-.crud-barra {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.crud-barra h2,
-.popup h3 {
-  margin: 0;
-}
-
-.filtro {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  color: var(--text);
+  background: var(--page);
 }
 
 input,
@@ -93,111 +47,49 @@ button {
 }
 
 input {
-  border: 1px solid var(--borde);
+  min-width: 0;
+  border: 1px solid var(--slate-300);
   border-radius: 8px;
-  padding: 8px 10px;
-  background: #fff;
+  padding: 10px 12px;
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 button {
-  border: 0;
+  border: 1px solid rgb(101 184 243 / 26%);
   border-radius: 8px;
-  padding: 8px 14px;
-  background: var(--primario);
-  color: #fff;
+  padding: 9px 14px;
+  color: var(--white);
+  background: var(--midnight-800);
+  box-shadow: inset 0 1px rgb(255 255 255 / 8%);
   cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 
-button.secundario {
-  background: #5c6b7a;
-}
-
-button.peligro {
-  background: var(--peligro);
-}
-
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(101 184 243 / 18%), inset 0 1px rgb(255 255 255 / 5%); outline: 0; }
+button:hover:not(:disabled) { filter: brightness(0.96); }
 button:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-}
+.crud-barra { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.crud-barra h2, .popup h3 { margin: 0; }
+.filtro { display: flex; gap: 8px; flex-wrap: wrap; }
+.secundario { border-color: var(--border); background: var(--midnight-800); color: var(--text); }
+.peligro { border-color: rgb(240 128 136 / 38%); background: var(--danger-strong); color: var(--white); }
+.id { font-family: Consolas, monospace; font-size: 0.75rem; word-break: break-all; max-width: 220px; }
+.acciones { display: flex; gap: 8px; white-space: nowrap; }
+.mensaje { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--reflective-border); border-radius: 8px; color: var(--success); background: var(--success-soft); }
+.mensaje.error { border-color: rgb(240 128 136 / 35%); color: var(--danger); background: var(--danger-soft); }
+table { width: 100%; border-collapse: collapse; background: var(--surface); }
+th, td { padding: 11px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+th { color: var(--slate-600); background: var(--midnight-800); font-size: 12px; }
+.fondo-popup { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgb(0 0 0 / 66%); }
+.popup { display: flex; width: min(480px, 100%); max-height: 90vh; flex-direction: column; gap: 12px; overflow: auto; padding: 20px; border: 1px solid var(--reflective-border); border-radius: 12px; background: var(--surface); box-shadow: var(--reflective-glow), var(--shadow); }
+.campo { display: flex; flex-direction: column; gap: 4px; }
+.campo span { font-size: 0.85rem; }
+.popup-acciones { display: flex; gap: 8px; justify-content: flex-end; }
 
-th,
-td {
-  text-align: left;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--borde);
-  vertical-align: top;
-}
-
-th {
-  background: #e8eef5;
-  font-size: 0.85rem;
-}
-
-.id {
-  font-family: Consolas, monospace;
-  font-size: 0.75rem;
-  word-break: break-all;
-  max-width: 220px;
-}
-
-.acciones {
-  display: flex;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.mensaje {
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  background: #e7f6ec;
-  border-radius: 8px;
-}
-
-.mensaje.error {
-  background: #fde8ea;
-}
-
-.fondo-popup {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 32, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-
-.popup {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  width: min(480px, 100%);
-  max-height: 90vh;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.campo span {
-  font-size: 0.85rem;
-}
-
-.popup-acciones {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
+*:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
