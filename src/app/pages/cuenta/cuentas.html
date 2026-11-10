@@ -39,7 +39,7 @@
       <tr>
         <td class="id" [attr.title]="fila.id_cuenta">{{ fila.id_cuenta }}</td>
         <td>{{ fila.numero_cuenta }}</td>
-        <td class="id" [attr.title]="fila.id_tipo_cuenta">{{ fila.id_tipo_cuenta }}</td>
+        <td class="id" [attr.title]="fila.id_tipo_cuenta">{{ fila.id_tipo_cuenta || '-' }}</td>
         <td class="id" [attr.title]="fila.id_usuario">{{ fila.id_usuario }}</td>
         <td>{{ fila.saldo }}</td>
         <td>{{ fila.estado }}</td>
@@ -130,4 +130,3 @@
     </form>
   </div>
 }
-

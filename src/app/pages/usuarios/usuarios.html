@@ -1,93 +1,164 @@
-<header class="crud-barra">
-  <h2>Usuarios</h2>
-
-  <form class="filtro" (submit)="$event.preventDefault(); buscarPorId()">
-    <input
-      [(ngModel)]="idFiltro"
-      name="idFiltro"
-      placeholder="Filtrar por ID"
-      autocomplete="off"
-    />
-    <button type="submit" [disabled]="cargando()">Buscar</button>
-    <button type="button" class="secundario" (click)="limpiarFiltro()" [disabled]="cargando()">
-      Todos
+<section class="usuarios-pagina" aria-labelledby="titulo-usuarios">
+  <header class="encabezado-pagina">
+    <div>
+      <p class="sobretitulo">Administración</p>
+      <h1 id="titulo-usuarios">Usuarios</h1>
+      <p class="descripcion-pagina">Consulta y administra los usuarios registrados en el sistema.</p>
+    </div>
+    <button class="boton-crear" type="button" (click)="abrirCrear()">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+      <span>Crear usuario</span>
     </button>
-  </form>
+  </header>
 
-  <button type="button" (click)="abrirCrear()">+ Crear</button>
-</header>
+  <section class="panel-usuarios" aria-label="Listado de usuarios">
+    <div class="barra-herramientas">
+      <form class="busqueda-usuario" role="search" (submit)="$event.preventDefault(); buscarPorId()">
+        <label class="campo-busqueda" for="filtro-usuario">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+          <input
+            id="filtro-usuario"
+            [(ngModel)]="idFiltro"
+            name="idFiltro"
+            placeholder="Buscar por ID de usuario"
+            autocomplete="off"
+            aria-label="Buscar por ID de usuario"
+          />
+        </label>
+        <button class="boton-buscar" type="submit" [disabled]="cargando()">Buscar</button>
+        <button class="boton-limpiar" type="button" (click)="limpiarFiltro()" [disabled]="cargando()">Ver todos</button>
+      </form>
+      <span class="total-registros">{{ filas().length }} registros</span>
+    </div>
 
-@if (mensaje()) {
-  <p class="mensaje" [class.error]="esError()">{{ mensaje() }}</p>
-}
-
-<table>
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Nombre</th>
-      <th>Usuario</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (fila of filas(); track fila.id_usuario) {
-      <tr>
-        <td class="id">{{ fila.id_usuario }}</td>
-        <td>
-          {{ fila.primer_nombre }} {{ fila.segundo_nombre }}
-          {{ fila.primer_apellido }} {{ fila.segundo_apellido }}
-        </td>
-        <td>{{ fila.nombre_usuario }}</td>
-        <td class="acciones">
-          <button type="button" (click)="abrirEditar(fila)">Editar</button>
-          <button type="button" class="peligro" (click)="eliminar(fila)">Eliminar</button>
-        </td>
-      </tr>
+    @if (mensaje()) {
+      <div class="toast" [class.toast-error]="esError()" [class.toast-success]="!esError()" [attr.role]="esError() ? 'alert' : 'status'" [attr.aria-live]="esError() ? 'assertive' : 'polite'">
+        <span class="toast-indicador" aria-hidden="true"></span>
+        <span>{{ mensaje() }}</span>
+        <button class="toast-cerrar" type="button" aria-label="Cerrar notificación" (click)="mensaje.set('')">×</button>
+      </div>
     }
-  </tbody>
-</table>
+
+    <div class="tabla-contenedor">
+      <table class="tabla-usuarios">
+        <thead>
+          <tr>
+            <th scope="col">ID de usuario</th>
+            <th scope="col">Nombre completo</th>
+            <th scope="col">Usuario</th>
+            <th scope="col"><span class="solo-lector">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (cargando() && !filas().length) {
+            <tr><td class="fila-vacia" colspan="4">Cargando usuarios...</td></tr>
+          } @else if (!filas().length) {
+            <tr><td class="fila-vacia" colspan="4">No hay usuarios para mostrar.</td></tr>
+          } @else {
+            @for (fila of filasPagina(); track fila.id_usuario) {
+              <tr>
+                <td>
+                  <div class="celda-id">
+                    <span class="id-abreviado" [title]="fila.id_usuario">{{ idCorto(fila.id_usuario) }}</span>
+                    <button class="boton-icono copiar-id" type="button" [attr.aria-label]="'Copiar ID completo de ' + fila.nombre_usuario" title="Copiar ID completo" (click)="copiarId(fila.id_usuario)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>
+                    </button>
+                  </div>
+                </td>
+                <td class="nombre-usuario">{{ fila.primer_nombre }} {{ fila.segundo_nombre }} {{ fila.primer_apellido }} {{ fila.segundo_apellido }}</td>
+                <td><span class="nombre-login">{{ fila.nombre_usuario }}</span></td>
+                <td>
+                  <div class="acciones-usuario">
+                    <button class="boton-icono" type="button" [attr.aria-label]="'Editar usuario ' + fila.nombre_usuario" title="Editar usuario" (click)="abrirEditar(fila)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg>
+                    </button>
+                    <button class="boton-icono boton-eliminar" type="button" [attr.aria-label]="'Eliminar usuario ' + fila.nombre_usuario" title="Eliminar usuario" (click)="eliminar(fila)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6" /></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="paginacion">
+      <span class="rango-registros">Mostrando {{ indiceInicial() }}–{{ indiceFinal() }} de {{ filas().length }}</span>
+      <div class="controles-pagina" aria-label="Paginación">
+        <button class="boton-pagina" type="button" aria-label="Página anterior" [disabled]="paginaActual() <= 1" (click)="irAPagina(paginaActual() - 1)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <span aria-live="polite">Página {{ paginaActual() }} de {{ totalPaginas() }}</span>
+        <button class="boton-pagina" type="button" aria-label="Página siguiente" [disabled]="paginaActual() >= totalPaginas()" (click)="irAPagina(paginaActual() + 1)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+        </button>
+      </div>
+    </footer>
+  </section>
+</section>
 
 @if (popupAbierto()) {
   <div class="fondo-popup" (click)="cerrarPopup()">
-    <form class="popup" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
-      <h3>{{ modo() === 'crear' ? 'Crear usuario' : 'Editar usuario' }}</h3>
+    <form class="popup modal-usuario" novalidate role="dialog" aria-modal="true" aria-labelledby="titulo-modal-usuario" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+      <div class="modal-cabecera">
+        <div>
+          <p class="sobretitulo">Usuarios</p>
+          <h2 id="titulo-modal-usuario">{{ modo() === 'crear' ? 'Crear usuario' : 'Editar usuario' }}</h2>
+        </div>
+        <button class="boton-icono cerrar-modal" type="button" aria-label="Cerrar formulario" (click)="cerrarPopup()">×</button>
+      </div>
 
-      <label class="campo">
-        <span>Primer nombre</span>
-        <input [(ngModel)]="formulario.primer_nombre" name="primer_nombre" required />
-      </label>
-      <label class="campo">
-        <span>Segundo nombre</span>
-        <input [(ngModel)]="formulario.segundo_nombre" name="segundo_nombre" />
-      </label>
-      <label class="campo">
-        <span>Primer apellido</span>
-        <input [(ngModel)]="formulario.primer_apellido" name="primer_apellido" required />
-      </label>
-      <label class="campo">
-        <span>Segundo apellido</span>
-        <input [(ngModel)]="formulario.segundo_apellido" name="segundo_apellido" />
-      </label>
-      <label class="campo">
-        <span>Nombre de usuario</span>
-        <input [(ngModel)]="formulario.nombre_usuario" name="nombre_usuario" required />
-      </label>
-      <label class="campo">
-        <span>{{ modo() === 'crear' ? 'Clave' : 'Clave (vacio = no cambiar)' }}</span>
-        <input
-          [(ngModel)]="formulario.clave"
-          name="clave"
-          type="password"
-          autocomplete="new-password"
-          [required]="modo() === 'crear'"
-        />
-      </label>
+      <div class="formulario-grid">
+        <label class="campo-modal">
+          <span>Primer nombre <b>Obligatorio</b></span>
+          <input autofocus [(ngModel)]="formulario.primer_nombre" name="primer_nombre" autocomplete="given-name" aria-required="true" [attr.aria-invalid]="formularioEnviado() && !formulario.primer_nombre.trim()" />
+          @if (formularioEnviado() && !formulario.primer_nombre.trim()) { <small class="error-campo">Escribe el primer nombre.</small> }
+        </label>
+        <label class="campo-modal">
+          <span>Segundo nombre <small>Opcional</small></span>
+          <input [(ngModel)]="formulario.segundo_nombre" name="segundo_nombre" autocomplete="additional-name" />
+        </label>
+        <label class="campo-modal">
+          <span>Primer apellido <b>Obligatorio</b></span>
+          <input [(ngModel)]="formulario.primer_apellido" name="primer_apellido" autocomplete="family-name" aria-required="true" [attr.aria-invalid]="formularioEnviado() && !formulario.primer_apellido.trim()" />
+          @if (formularioEnviado() && !formulario.primer_apellido.trim()) { <small class="error-campo">Escribe el primer apellido.</small> }
+        </label>
+        <label class="campo-modal">
+          <span>Segundo apellido <small>Opcional</small></span>
+          <input [(ngModel)]="formulario.segundo_apellido" name="segundo_apellido" />
+        </label>
+        <label class="campo-modal">
+          <span>Nombre de usuario <b>Obligatorio</b></span>
+          <input [(ngModel)]="formulario.nombre_usuario" name="nombre_usuario" autocomplete="username" aria-required="true" [attr.aria-invalid]="formularioEnviado() && !formulario.nombre_usuario.trim()" />
+          @if (formularioEnviado() && !formulario.nombre_usuario.trim()) { <small class="error-campo">Escribe un nombre de usuario.</small> }
+        </label>
+        <label class="campo-modal">
+          <span>{{ modo() === 'crear' ? 'Clave' : 'Nueva clave' }} <b>{{ modo() === 'crear' ? 'Obligatoria' : 'Opcional' }}</b></span>
+          <input [(ngModel)]="formulario.clave" name="clave" type="password" autocomplete="new-password" [attr.aria-required]="modo() === 'crear'" [attr.aria-invalid]="formularioEnviado() && modo() === 'crear' && !formulario.clave.trim()" />
+          @if (formularioEnviado() && modo() === 'crear' && !formulario.clave.trim()) { <small class="error-campo">Escribe una clave para el nuevo usuario.</small> }
+        </label>
+      </div>
 
-      <div class="popup-acciones">
-        <button type="button" class="secundario" (click)="cerrarPopup()">Cancelar</button>
-        <button type="submit" [disabled]="cargando()">Guardar</button>
+      <div class="modal-acciones">
+        <button class="boton-cancelar" type="button" (click)="cerrarPopup()">Cancelar</button>
+        <button class="boton-guardar" type="submit" [disabled]="cargando()">{{ cargando() ? 'Guardando...' : 'Guardar usuario' }}</button>
       </div>
     </form>
+  </div>
+}
+
+@if (pendienteEliminar(); as usuarioEliminar) {
+  <div class="fondo-popup" (click)="cerrarDialogos()">
+    <section class="popup modal-confirmacion" role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmar-eliminacion" aria-describedby="texto-confirmar-eliminacion" (click)="$event.stopPropagation()">
+      <div class="icono-confirmacion" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6" /></svg></div>
+      <h2 id="titulo-confirmar-eliminacion">¿Eliminar usuario?</h2>
+      <p id="texto-confirmar-eliminacion">Se eliminará a <strong>{{ usuarioEliminar.nombre_usuario }}</strong>. Esta acción no se puede deshacer.</p>
+      <div class="modal-acciones">
+        <button class="boton-cancelar" type="button" (click)="cerrarDialogos()">Cancelar</button>
+        <button class="boton-confirmar-eliminacion" type="button" [disabled]="cargando()" (click)="confirmarEliminar()">{{ cargando() ? 'Eliminando...' : 'Eliminar usuario' }}</button>
+      </div>
+    </section>
   </div>
 }

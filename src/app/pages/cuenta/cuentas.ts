@@ -145,13 +145,13 @@ export class Cuentas implements OnInit {
       next: (respuesta) => {
         const filas = respuesta.data ?? [];
         this.filas.set(filas);
-        this.avisar(filas.length ? '' : 'No hay registros');
+        this.avisar(filas.length ? '' : 'No hay cuentas');
         this.cargando.set(false);
       },
       error: (error: HttpErrorResponse) => {
         this.filas.set([]);
         const listaVacia = error.status === 404;
-        this.avisar(listaVacia ? 'No hay registros' : this.textoError(error, true), !listaVacia);
+        this.avisar(listaVacia ? 'No hay cuentas' : this.textoError(error, true), !listaVacia);
         this.cargando.set(false);
       },
     });
@@ -233,12 +233,12 @@ export class Cuentas implements OnInit {
     this.esError.set(error && texto.length > 0);
   }
 
-    private textoError(error: HttpErrorResponse, alListar: boolean): string {
+  private textoError(error: HttpErrorResponse, alListar: boolean): string {
     if (error.status === 0) {
       return 'No se pudo conectar con la API. Revisa que el backend este en el puerto 8000.';
     }
     if (error.status === 404) {
-      return alListar ? 'No hay registros' : 'No encontrado';
+      return alListar ? 'No hay cuentas' : 'Cuenta no encontrada';
     }
     const detalle = error.error?.detail;
     if (Array.isArray(detalle)) {
@@ -255,4 +255,3 @@ export class Cuentas implements OnInit {
     return `No se pudo completar la operacion (error ${error.status})`;
   }
 }
-

@@ -2,14 +2,14 @@ import { Routes } from '@angular/router';
 
 import { Shell } from './layout/shell/shell';
 import { Usuarios } from './pages/usuarios/usuarios';
-import { TiposCuenta } from './pages/tipocuenta/tipocuenta';
-import { Acciones } from './pages/accion/accion';
+import { Cuentas } from './pages/cuenta/cuentas';
 import { Tarjetas } from './pages/tarjeta/tarjeta';
-import { Cuentas } from './pages/cuenta/cuentas'; 
+import { TiposCuenta } from './pages/tipocuenta/tipocuenta';
+import { Sedes } from './pages/sedes/sedes';
 import { Sucursales } from './pages/sucursales/sucursales';
 import { Empleados } from './pages/empleados/empleados';
 import { Cuotas } from './pages/cuotas/cuotas';
-import { Sedes } from './pages/sedes/sedes';
+import { Acciones } from './pages/accion/accion';
 
 export const routes: Routes = [
   {
@@ -18,16 +18,15 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'usuarios' },
       { path: 'usuarios', component: Usuarios },
-      { path: 'cuentas', component: Cuentas },
-      { path: 'tipocuenta', component: TiposCuenta},
-      { path: 'acciones', component: Acciones },
+      { path: 'cuenta', component: Cuentas },
       { path: 'tarjetas', component: Tarjetas },
+      { path: 'tipocuenta', component: TiposCuenta },
+      { path: 'sedes', component: Sedes },
       { path: 'sucursales', component: Sucursales },
       { path: 'empleados', component: Empleados },
       { path: 'cuotas', component: Cuotas },
-       { path: 'sedes', component: Sedes },
+      { path: 'acciones', component: Acciones },
     ],
   },
   { path: '**', redirectTo: 'usuarios' },
 ];
-
