@@ -11,9 +11,13 @@ export class Shell {
   readonly menu = [
     { ruta: '/usuarios', etiqueta: 'Usuarios', icono: 'usuarios' },
     { ruta: '/cuenta', etiqueta: 'Cuentas', icono: 'cuentas' },
-    { ruta: '/cuotas', etiqueta: 'Cuotas', icono: 'cuotas' },
+    { ruta: '/tarjetas', etiqueta: 'Tarjetas', icono: 'tarjetas' },
+    { ruta: '/tipocuenta', etiqueta: 'Tipos de cuenta', icono: 'tipos' },
+    { ruta: '/sedes', etiqueta: 'Sedes', icono: 'sedes' },
     { ruta: '/sucursales', etiqueta: 'Sucursales', icono: 'sucursales' },
     { ruta: '/empleados', etiqueta: 'Empleados', icono: 'empleados' },
+    { ruta: '/cuotas', etiqueta: 'Cuotas', icono: 'cuotas' },
+    { ruta: '/acciones', etiqueta: 'Acciones', icono: 'acciones' },
   ] as const;
 
   readonly contraido = signal(this.leerEstadoInicial());
@@ -52,3 +56,4 @@ export class Shell {
     }
   }
 }
+

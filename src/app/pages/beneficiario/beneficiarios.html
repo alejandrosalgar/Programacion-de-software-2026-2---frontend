@@ -1,0 +1,103 @@
+<header class="crud-barra">
+  <h2>Beneficiarios</h2>
+
+  <form class="filtro" (submit)="$event.preventDefault(); buscarPorId()">
+    <input
+      [(ngModel)]="idFiltro"
+      name="idFiltro"
+      placeholder="Filtrar por ID"
+      autocomplete="off"
+    />
+    <button type="submit" [disabled]="cargando()">Buscar</button>
+    <button type="button" class="secundario" (click)="limpiarFiltro()" [disabled]="cargando()">
+      Todos
+    </button>
+  </form>
+
+  <button type="button" (click)="abrirCrear()">+ Crear</button>
+</header>
+
+@if (mensaje()) {
+  <p class="mensaje" [class.error]="esError()">{{ mensaje() }}</p>
+}
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nombre completo</th>
+      <th>Parentesco</th>
+      <th>Telefono</th>
+      <th>Cliente</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (fila of filas(); track fila.id_beneficiario) {
+      <tr>
+        <td class="id" [attr.title]="fila.id_beneficiario">{{ fila.id_beneficiario }}</td>
+        <td>{{ fila.nombre_completo }}</td>
+        <td>{{ fila.parentesco }}</td>
+        <td>{{ fila.telefono }}</td>
+        <td class="id" [attr.title]="fila.id_cliente">{{ fila.id_cliente }}</td>
+        <td class="acciones">
+          <button type="button" (click)="abrirEditar(fila)">Editar</button>
+          <button type="button" class="peligro" (click)="eliminar(fila)">Eliminar</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+@if (popupAbierto()) {
+  <div class="fondo-popup" (click)="cerrarPopup()">
+    <form class="popup" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+      <h3>{{ modo() === 'crear' ? 'Crear beneficiario' : 'Editar beneficiario' }}</h3>
+
+      <label class="campo">
+        <span>UUID del cliente</span>
+        <input
+          [(ngModel)]="formulario.id_cliente"
+          name="id_cliente"
+          autocomplete="off"
+          [disabled]="modo() === 'editar'"
+          [required]="modo() === 'crear'"
+        />
+      </label>
+      <label class="campo">
+        <span>Nombre completo</span>
+        <input [(ngModel)]="formulario.nombre_completo" name="nombre_completo" required />
+      </label>
+      <label class="campo">
+        <span>Parentesco</span>
+        <input [(ngModel)]="formulario.parentesco" name="parentesco" required />
+      </label>
+      <label class="campo">
+        <span>Telefono</span>
+        <input
+          [(ngModel)]="formulario.telefono"
+          name="telefono"
+          maxlength="20"
+          autocomplete="off"
+          required
+        />
+      </label>
+      <label class="campo">
+        <span>{{
+          modo() === 'crear' ? 'UUID del usuario que crea' : 'UUID del usuario que edita (opcional)'
+        }}</span>
+        <input
+          [(ngModel)]="idUsuarioAccion"
+          name="idUsuarioAccion"
+          autocomplete="off"
+          [required]="modo() === 'crear'"
+        />
+      </label>
+
+      <div class="popup-acciones">
+        <button type="button" class="secundario" (click)="cerrarPopup()">Cancelar</button>
+        <button type="submit" [disabled]="cargando()">Guardar</button>
+      </div>
+    </form>
+  </div>
+}

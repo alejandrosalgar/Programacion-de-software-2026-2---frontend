@@ -7,8 +7,17 @@ import { CuentaService } from '../../services/cuenta.service';
 
 type ModoPopup = 'crear' | 'editar';
 
+interface CuentaForm {
+  numero_cuenta: string;
+  id_tipo_cuenta: string;
+  id_usuario: string;
+  saldo: number | null;
+  estado: string;
+  fecha_apertura: string;
+}
+
 @Component({
-  selector: 'app-cuenta',
+  selector: 'app-cuentas',
   imports: [FormsModule],
   templateUrl: './cuentas.html',
   styleUrl: './cuentas.css',
@@ -24,8 +33,9 @@ export class Cuentas implements OnInit {
   readonly modo = signal<ModoPopup>('crear');
 
   idFiltro = '';
-  formulario: CuentaCreate = this.formularioVacio();
-  idUsuarioEdicion = '';
+  // UUID del usuario que crea o edita (id_usuario_creacion / id_usuario_edicion)
+  idUsuarioAccion = '';
+  formulario: CuentaForm = this.formularioVacio();
   private idEditando = '';
 
   ngOnInit(): void {
@@ -62,23 +72,23 @@ export class Cuentas implements OnInit {
   abrirCrear(): void {
     this.modo.set('crear');
     this.idEditando = '';
-    this.idUsuarioEdicion = '';
+    this.idUsuarioAccion = '';
     this.formulario = this.formularioVacio();
     this.popupAbierto.set(true);
   }
 
-  abrirEditar(cuenta: Cuenta): void {
+  abrirEditar(fila: Cuenta): void {
     this.modo.set('editar');
-    this.idEditando = cuenta.id_cuenta;
+    this.idEditando = fila.id_cuenta;
+    this.idUsuarioAccion = '';
     this.formulario = {
-      numero_cuenta: cuenta.numero_cuenta,
-      id_usuario: cuenta.id_usuario,
-      id_usuario_creacion: cuenta.id_usuario_creacion,
-      id_tipo_cuenta: cuenta.id_tipo_cuenta,
-      saldo: cuenta.saldo,
-      estado: cuenta.estado,
+      numero_cuenta: fila.numero_cuenta,
+      id_tipo_cuenta: fila.id_tipo_cuenta ?? '',
+      id_usuario: fila.id_usuario,
+      saldo: fila.saldo,
+      estado: fila.estado,
+      fecha_apertura: fila.fecha_apertura,
     };
-    this.idUsuarioEdicion = '';
     this.popupAbierto.set(true);
   }
 
@@ -88,7 +98,10 @@ export class Cuentas implements OnInit {
 
   guardar(): void {
     if (!this.formularioValido()) {
-      this.avisar('Completa los datos requeridos y verifica los UUID.', true);
+      this.avisar(
+        'Completa saldo, estado y, al crear, el titular y el UUID del usuario que crea.',
+        true,
+      );
       return;
     }
 
@@ -107,14 +120,14 @@ export class Cuentas implements OnInit {
     });
   }
 
-  eliminar(cuenta: Cuenta): void {
-    const confirmar = confirm(`Eliminar la cuenta ${cuenta.numero_cuenta}?`);
+  eliminar(fila: Cuenta): void {
+    const confirmar = confirm(`Eliminar la cuenta ${fila.numero_cuenta}?`);
     if (!confirmar) {
       return;
     }
 
     this.cargando.set(true);
-    this.cuentaService.eliminar(cuenta.id_cuenta).subscribe({
+    this.cuentaService.eliminar(fila.id_cuenta).subscribe({
       next: () => {
         this.avisar('Cuenta eliminada');
         this.refrescar();
@@ -165,47 +178,53 @@ export class Cuentas implements OnInit {
 
   private formularioValido(): boolean {
     const datos = this.formulario;
-    const base =
-      datos.numero_cuenta.trim() &&
-      datos.id_usuario.trim() &&
-      datos.id_usuario_creacion.trim() &&
-      (datos.saldo ?? 0) >= 0;
+    const base = datos.estado.trim() && datos.saldo !== null;
     if (this.modo() === 'crear') {
-      return Boolean(base);
+      return Boolean(base && datos.id_usuario.trim() && this.idUsuarioAccion.trim());
     }
-    return Boolean(base && this.idUsuarioEdicion.trim());
+    return Boolean(base && datos.numero_cuenta.trim());
   }
 
   private datosCreacion(): CuentaCreate {
-    return {
-      numero_cuenta: this.formulario.numero_cuenta.trim(),
+    const datos: CuentaCreate = {
+      id_tipo_cuenta: this.formulario.id_tipo_cuenta.trim() || null,
       id_usuario: this.formulario.id_usuario.trim(),
-      id_usuario_creacion: this.formulario.id_usuario_creacion.trim(),
-      id_tipo_cuenta: this.formulario.id_tipo_cuenta?.trim() || null,
-      saldo: this.formulario.saldo ?? 0,
-      estado: this.formulario.estado?.trim() || 'Activa',
+      saldo: Number(this.formulario.saldo),
+      estado: this.formulario.estado.trim(),
+      id_usuario_creacion: this.idUsuarioAccion.trim(),
     };
+    const numero = this.formulario.numero_cuenta.trim();
+    if (numero) {
+      datos.numero_cuenta = numero;
+    }
+    if (this.formulario.fecha_apertura) {
+      datos.fecha_apertura = this.formulario.fecha_apertura;
+    }
+    return datos;
   }
 
+  // CuentaUpdate no incluye id_usuario ni fecha_apertura: no se modifican al editar
   private datosEdicion(): CuentaUpdate {
-    return {
+    const datos: CuentaUpdate = {
       numero_cuenta: this.formulario.numero_cuenta.trim(),
-      id_usuario: this.formulario.id_usuario.trim(),
-      id_usuario_edicion: this.idUsuarioEdicion.trim(),
-      id_tipo_cuenta: this.formulario.id_tipo_cuenta?.trim() || null,
-      saldo: this.formulario.saldo ?? 0,
-      estado: this.formulario.estado?.trim() || 'Activa',
+      id_tipo_cuenta: this.formulario.id_tipo_cuenta.trim() || null,
+      saldo: Number(this.formulario.saldo),
+      estado: this.formulario.estado.trim(),
     };
+    if (this.idUsuarioAccion.trim()) {
+      datos.id_usuario_edicion = this.idUsuarioAccion.trim();
+    }
+    return datos;
   }
 
-  private formularioVacio(): CuentaCreate {
+  private formularioVacio(): CuentaForm {
     return {
       numero_cuenta: '',
+      id_tipo_cuenta: '',
       id_usuario: '',
-      id_usuario_creacion: '',
-      id_tipo_cuenta: null,
       saldo: 0,
       estado: 'Activa',
+      fecha_apertura: '',
     };
   }
 
@@ -221,16 +240,18 @@ export class Cuentas implements OnInit {
     if (error.status === 404) {
       return alListar ? 'No hay cuentas' : 'Cuenta no encontrada';
     }
-    if (error.status === 409) {
-      return 'Ese numero de cuenta ya existe';
+    const detalle = error.error?.detail;
+    if (Array.isArray(detalle)) {
+      return (
+        'Revisa: ' +
+        detalle
+          .map((d: { loc?: string[]; msg?: string }) => `${(d.loc ?? []).slice(1).join('.')}: ${d.msg}`)
+          .join(' | ')
+      );
     }
-    if (error.status === 422) {
-      return 'Revisa los datos y que los identificadores tengan formato UUID.';
+    if (typeof detalle === 'string') {
+      return detalle;
     }
-    const detail = error.error?.detail;
-    if (typeof detail === 'string') {
-      return detail;
-    }
-    return 'No se pudo completar la operacion';
+    return `No se pudo completar la operacion (error ${error.status})`;
   }
 }
