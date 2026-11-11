@@ -1,0 +1,29 @@
+name: Tests en pull request a dev
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  test:
+    name: Tests y build de produccion
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bajar el codigo del pull request
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar tests
+        run: npm run test:ci
+
+      - name: Compilar para produccion
+        run: npm run build

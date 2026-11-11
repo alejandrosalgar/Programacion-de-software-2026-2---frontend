@@ -1,0 +1,54 @@
+name: Deploy a Firebase al llegar a main
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-firebase-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Tests, build y deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Bajar el codigo de main
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar tests
+        run: npm run test:ci
+
+      - name: Compilar para produccion
+        run: npm run build
+
+      - name: Leer el id del proyecto Firebase
+        id: firebase_project
+        run: |
+          ID=$(node -e "process.stdout.write(require('./.firebaserc').projects.default)")
+          if [ "$ID" = "TU_PROJECT_ID" ]; then
+            echo "Cambia TU_PROJECT_ID en .firebaserc por el id real del proyecto Firebase."
+            exit 1
+          fi
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+
+      - name: Desplegar Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ steps.firebase_project.outputs.id }}
+          channelId: live
+          entryPoint: .
