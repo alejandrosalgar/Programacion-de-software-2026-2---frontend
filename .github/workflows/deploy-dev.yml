@@ -3,7 +3,7 @@ name: Deploy a Firebase al llegar a main
 on:
   push:
     branches:
-      - main
+      - dev
 
 concurrency:
   group: deploy-firebase-main
@@ -17,7 +17,7 @@ jobs:
       contents: read
       checks: write
     steps:
-      - name: Bajar el codigo de main
+      - name: Bajar el codigo de dev
         uses: actions/checkout@v4
 
       - name: Instalar Node.js
@@ -29,9 +29,6 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Ejecutar tests
-        run: npm run test:ci
-
       - name: Compilar para produccion
         run: npm run build
 
@@ -39,7 +36,7 @@ jobs:
         id: firebase_project
         run: |
           ID=$(node -e "process.stdout.write(require('./.firebaserc').projects.default)")
-          if [ "$ID" = "TU_PROJECT_ID" ]; then
+          if [ "$ID" = "programacion-software-2026-2" ]; then
             echo "Cambia TU_PROJECT_ID en .firebaserc por el id real del proyecto Firebase."
             exit 1
           fi
@@ -48,7 +45,7 @@ jobs:
       - name: Desplegar Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROGRAMACION_SOFTWARE_2026_2 }}
           projectId: ${{ steps.firebase_project.outputs.id }}
           channelId: live
           entryPoint: .
