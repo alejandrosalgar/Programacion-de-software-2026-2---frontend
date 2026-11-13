@@ -1,4 +1,4 @@
-name: Deploy a Firebase al llegar a main
+name: Deploy a Firebase al llegar a dev
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - dev
 
 concurrency:
-  group: deploy-firebase-main
+  group: deploy-firebase-dev
   cancel-in-progress: false
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
         id: firebase_project
         run: |
           ID=$(node -e "process.stdout.write(require('./.firebaserc').projects.default)")
-          if [ "$ID" = "programacion-software-2026-2" ]; then
+          if [ "$ID" = "TU_PROJECT_ID" ] || [ -z "$ID" ]; then
             echo "Cambia TU_PROJECT_ID en .firebaserc por el id real del proyecto Firebase."
             exit 1
           fi
