@@ -26,5 +26,5 @@ export interface CuotaUpdate {
   numero_cuota?: number;
   fecha_vencimiento?: string;
   estado?: string;
-  id_usuario_creacion?: string | null;
+  id_usuario_edicion?: string | null;
 }

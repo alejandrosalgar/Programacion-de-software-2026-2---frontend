@@ -14,6 +14,9 @@ export class Shell {
     { ruta: '/cuotas', etiqueta: 'Cuotas', icono: 'cuotas' },
     { ruta: '/sucursales', etiqueta: 'Sucursales', icono: 'sucursales' },
     { ruta: '/empleados', etiqueta: 'Empleados', icono: 'empleados' },
+    { ruta: '/tarjetas', etiqueta: 'Tarjetas', icono: 'tarjetas' },
+    { ruta: '/tipos-cuenta', etiqueta: 'Tipos de cuenta', icono: 'tipos-cuenta' },
+    { ruta: '/acciones', etiqueta: 'Acciones', icono: 'acciones' },
   ] as const;
 
   readonly contraido = signal(this.leerEstadoInicial());

@@ -178,7 +178,12 @@ export class Sucursales implements OnInit {
   }
 
   private datosEdicion(): SucursalUpdate {
-    return this.datosFormulario();
+    return {
+      nombre: this.formulario.nombre.trim(),
+      direccion: this.formulario.direccion.trim(),
+      ciudad: this.formulario.ciudad.trim(),
+      telefono: this.formulario.telefono.trim(),
+    };
   }
 
   private formularioVacio(): SucursalCreate {

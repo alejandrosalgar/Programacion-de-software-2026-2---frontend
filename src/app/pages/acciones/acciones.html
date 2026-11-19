@@ -1,0 +1,59 @@
+<section class="entidad-pagina">
+  <header class="encabezado-entidad">
+    <div><p class="sobretitulo-entidad">Seguridad y auditoría</p><h1>Acciones</h1><p>Consulta la actividad registrada por los usuarios.</p></div>
+    <button class="accion-principal" type="button" (click)="abrirCrear()">+ Registrar acción</button>
+  </header>
+
+  <section class="panel-entidad" aria-label="Registro de acciones">
+    <div class="barra-entidad">
+      <form class="busqueda-entidad" (submit)="$event.preventDefault(); buscarPorUsuario()">
+        <label for="filtro-usuario-accion">Filtrar por ID de usuario</label>
+        <input id="filtro-usuario-accion" [(ngModel)]="idUsuarioFiltro" name="idUsuarioFiltro" placeholder="UUID del usuario" autocomplete="off" />
+        <button type="submit" [disabled]="cargando()">Buscar</button>
+        <button class="boton-neutro" type="button" (click)="limpiarFiltro()" [disabled]="cargando()">Ver todas</button>
+      </form>
+      <span class="contador-entidad">{{ filas().length }} registros</span>
+    </div>
+
+    @if (mensaje()) { <p class="mensaje" [class.error]="esError()" role="status">{{ mensaje() }}</p> }
+
+    <div class="tabla-scroll">
+      <table class="tabla-entidad">
+        <thead><tr><th>Fecha</th><th>Tipo de acción</th><th>ID de usuario</th><th>Descripción</th><th>IP origen</th><th>Resultado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          @if (cargando() && !filas().length) { <tr><td class="sin-datos" colspan="7">Cargando acciones...</td></tr> }
+          @else if (!filas().length) { <tr><td class="sin-datos" colspan="7">No hay acciones para mostrar.</td></tr> }
+          @else {
+            @for (accion of filas(); track accion.id_accion) {
+              <tr>
+                <td>{{ accion.fecha_accion }}</td>
+                <td class="dato-principal">{{ accion.tipo_accion }}</td>
+                <td class="uuid-celda" [title]="accion.id_usuario">{{ accion.id_usuario }}</td>
+                <td>{{ accion.descripcion || '—' }}</td>
+                <td>{{ accion.ip_origen || '—' }}</td>
+                <td><span class="estado-etiqueta" [class.resultado-error]="accion.resultado.toLowerCase() === 'error'">{{ accion.resultado }}</span></td>
+                <td class="acciones-celda"><button type="button" (click)="abrirEditar(accion)">Editar</button><button type="button" class="boton-peligro" (click)="eliminar(accion)">Eliminar</button></td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+@if (popupAbierto()) {
+  <div class="fondo-popup" (click)="cerrarPopup()">
+    <form class="popup formulario-entidad" (click)="$event.stopPropagation()" (ngSubmit)="guardar()">
+      <h2>{{ modo() === 'crear' ? 'Registrar acción' : 'Editar acción' }}</h2>
+      <div class="campos-entidad">
+        @if (modo() === 'crear') { <label class="campo-ancho"><span>ID de usuario</span><input [(ngModel)]="formulario.id_usuario" name="id_usuario" required /></label> }
+        <label><span>Tipo de acción</span><input [(ngModel)]="formulario.tipo_accion" name="tipo_accion" maxlength="50" required /></label>
+        <label><span>Resultado</span><select [(ngModel)]="formulario.resultado" name="resultado"><option value="Exito">Éxito</option><option value="Error">Error</option></select></label>
+        <label class="campo-ancho"><span>Descripción</span><textarea [(ngModel)]="formulario.descripcion" name="descripcion" maxlength="255" rows="3"></textarea></label>
+        <label class="campo-ancho"><span>IP de origen</span><input [(ngModel)]="formulario.ip_origen" name="ip_origen" maxlength="45" placeholder="Opcional" /></label>
+      </div>
+      <div class="acciones-formulario"><button class="boton-neutro" type="button" (click)="cerrarPopup()">Cancelar</button><button type="submit" [disabled]="cargando()">{{ cargando() ? 'Guardando...' : 'Guardar acción' }}</button></div>
+    </form>
+  </div>
+}

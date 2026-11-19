@@ -258,18 +258,21 @@ export class Usuarios implements OnInit, OnDestroy {
     if (error.status === 0) {
       return 'No se pudo conectar con la API. Revisa que el backend este en el puerto 8000.';
     }
-    if (error.status === 404) {
-      return alListar ? 'No hay registros' : 'No encontrado';
-    }
-    if (error.status === 409) {
-      return 'Ese nombre de usuario ya existe';
-    }
-    if (error.status === 422) {
-      return 'Revisa los datos. El filtro por ID tiene que ser un UUID.';
+    if (error.status === 404 && alListar) {
+      return 'No hay registros';
     }
     const detail = error.error?.detail;
     if (typeof detail === 'string') {
       return detail;
+    }
+    if (error.status === 404) {
+      return 'No encontrado';
+    }
+    if (error.status === 409) {
+      return 'El usuario ya existe o tiene registros asociados';
+    }
+    if (error.status === 422) {
+      return 'Revisa los datos. El filtro por ID tiene que ser un UUID.';
     }
     return 'No se pudo completar la operacion';
   }
