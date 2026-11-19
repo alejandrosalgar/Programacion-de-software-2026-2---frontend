@@ -1,22 +1,25 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { Usuario, UsuarioCreate, UsuarioUpdate } from '../../models/usuario.model';
-import { UsuarioService } from '../../services/usuario.service';
+import { Tarjeta, TarjetaCreate, TarjetaUpdate } from '../../models/tarjeta.model';
+import { GenericService } from '../../services/generic.service';
 
 type ModoPopup = 'crear' | 'editar';
 
 @Component({
-  selector: 'app-cuenta',
+  selector: 'app-tarjetas',
   imports: [FormsModule],
-  templateUrl: './cuenta.html',
-  styleUrl: './cuenta.css',
+  templateUrl: './tarjetas.html',
+  styleUrl: './tarjetas.css',
 })
-export class Usuarios implements OnInit {
-  private readonly usuarioService = inject(UsuarioService);
+export class Tarjetas implements OnInit {
+  private readonly tarjetaService = new GenericService<Tarjeta, TarjetaCreate, TarjetaUpdate>(
+    inject(HttpClient),
+    'tarjetas',
+  );
 
-  readonly filas = signal<Usuario[]>([]);
+  readonly filas = signal<Tarjeta[]>([]);
   readonly mensaje = signal('');
   readonly esError = signal(false);
   readonly cargando = signal(false);
@@ -24,7 +27,8 @@ export class Usuarios implements OnInit {
   readonly modo = signal<ModoPopup>('crear');
 
   idFiltro = '';
-  formulario: UsuarioCreate = this.formularioVacio();
+  idUsuarioEdicion = '';
+  formulario: TarjetaCreate = this.formularioVacio();
   private idEditando = '';
 
   ngOnInit(): void {
@@ -39,9 +43,9 @@ export class Usuarios implements OnInit {
     }
 
     this.cargando.set(true);
-    this.usuarioService.obtener(id).subscribe({
-      next: (usuario) => {
-        this.filas.set([usuario]);
+    this.tarjetaService.obtener(id).subscribe({
+      next: (tarjeta) => {
+        this.filas.set([tarjeta]);
         this.avisar('');
         this.cargando.set(false);
       },
@@ -61,20 +65,25 @@ export class Usuarios implements OnInit {
   abrirCrear(): void {
     this.modo.set('crear');
     this.idEditando = '';
+    this.idUsuarioEdicion = '';
     this.formulario = this.formularioVacio();
     this.popupAbierto.set(true);
   }
 
-  abrirEditar(fila: Usuario): void {
+  abrirEditar(fila: Tarjeta): void {
     this.modo.set('editar');
-    this.idEditando = fila.id_usuario;
+    this.idEditando = fila.id_tarjeta;
+    this.idUsuarioEdicion = '';
     this.formulario = {
-      primer_nombre: fila.primer_nombre,
-      segundo_nombre: fila.segundo_nombre,
-      primer_apellido: fila.primer_apellido,
-      segundo_apellido: fila.segundo_apellido,
-      nombre_usuario: fila.nombre_usuario,
-      clave: '',
+      id_cuenta: fila.id_cuenta,
+      numero_tarjeta: fila.numero_tarjeta,
+      tipo_tarjeta: fila.tipo_tarjeta,
+      fecha_emision: fila.fecha_emision.slice(0, 10),
+      fecha_vencimiento: fila.fecha_vencimiento.slice(0, 10),
+      cvv: fila.cvv,
+      limite_credito: fila.limite_credito,
+      estado: fila.estado,
+      id_usuario_creacion: fila.id_usuario_creacion,
     };
     this.popupAbierto.set(true);
   }
@@ -85,35 +94,38 @@ export class Usuarios implements OnInit {
 
   guardar(): void {
     if (!this.formularioValido()) {
-      this.avisar('Completa nombre, apellido, usuario y, al crear, la clave.', true);
+      this.avisar(
+        'Completa cuenta, numero, tipo, fechas, CVV, limite, estado y, al crear, el usuario de creacion.',
+        true,
+      );
       return;
     }
 
     this.cargando.set(true);
     if (this.modo() === 'crear') {
-      this.usuarioService.crear(this.formulario).subscribe({
-        next: () => this.despuesDeGuardar('Usuario creado'),
+      this.tarjetaService.crear(this.datosCreacion()).subscribe({
+        next: () => this.despuesDeGuardar('Tarjeta creada'),
         error: (error: HttpErrorResponse) => this.falloGuardar(error),
       });
       return;
     }
 
-    this.usuarioService.actualizar(this.idEditando, this.datosEdicion()).subscribe({
-      next: () => this.despuesDeGuardar('Usuario actualizado'),
+    this.tarjetaService.actualizar(this.idEditando, this.datosEdicion()).subscribe({
+      next: () => this.despuesDeGuardar('Tarjeta actualizada'),
       error: (error: HttpErrorResponse) => this.falloGuardar(error),
     });
   }
 
-  eliminar(fila: Usuario): void {
-    const confirmar = confirm(`Eliminar a ${fila.nombre_usuario}?`);
+  eliminar(fila: Tarjeta): void {
+    const confirmar = confirm(`Eliminar la tarjeta ${fila.numero_tarjeta}?`);
     if (!confirmar) {
       return;
     }
 
     this.cargando.set(true);
-    this.usuarioService.eliminar(fila.id_usuario).subscribe({
+    this.tarjetaService.eliminar(fila.id_tarjeta).subscribe({
       next: () => {
-        this.avisar('Usuario eliminado');
+        this.avisar('Tarjeta eliminada');
         this.refrescar();
       },
       error: (error: HttpErrorResponse) => {
@@ -125,7 +137,7 @@ export class Usuarios implements OnInit {
 
   private cargarTodos(): void {
     this.cargando.set(true);
-    this.usuarioService.listar().subscribe({
+    this.tarjetaService.listar().subscribe({
       next: (respuesta) => {
         const filas = respuesta.data ?? [];
         this.filas.set(filas);
@@ -162,38 +174,66 @@ export class Usuarios implements OnInit {
 
   private formularioValido(): boolean {
     const datos = this.formulario;
+    const limite = Number(datos.limite_credito);
     const base =
-      datos.primer_nombre.trim() &&
-      datos.primer_apellido.trim() &&
-      datos.nombre_usuario.trim();
+      datos.id_cuenta.trim() &&
+      datos.numero_tarjeta.trim() &&
+      datos.tipo_tarjeta.trim() &&
+      datos.fecha_emision &&
+      datos.fecha_vencimiento &&
+      datos.cvv.trim() &&
+      datos.estado.trim() &&
+      !Number.isNaN(limite);
     if (this.modo() === 'crear') {
-      return Boolean(base && datos.clave.trim());
+      return Boolean(base && datos.id_usuario_creacion.trim());
     }
     return Boolean(base);
   }
 
-  private datosEdicion(): UsuarioUpdate {
-    const datos: UsuarioUpdate = {
-      primer_nombre: this.formulario.primer_nombre.trim(),
-      segundo_nombre: this.formulario.segundo_nombre.trim(),
-      primer_apellido: this.formulario.primer_apellido.trim(),
-      segundo_apellido: this.formulario.segundo_apellido.trim(),
-      nombre_usuario: this.formulario.nombre_usuario.trim(),
+  private datosCreacion(): TarjetaCreate {
+    const datos = this.formulario;
+    return {
+      id_cuenta: datos.id_cuenta.trim(),
+      numero_tarjeta: datos.numero_tarjeta.trim(),
+      tipo_tarjeta: datos.tipo_tarjeta.trim(),
+      fecha_emision: datos.fecha_emision,
+      fecha_vencimiento: datos.fecha_vencimiento,
+      cvv: datos.cvv.trim(),
+      limite_credito: Number(datos.limite_credito),
+      estado: datos.estado.trim(),
+      id_usuario_creacion: datos.id_usuario_creacion.trim(),
     };
-    if (this.formulario.clave.trim()) {
-      datos.clave = this.formulario.clave;
-    }
-    return datos;
   }
 
-  private formularioVacio(): UsuarioCreate {
+  private datosEdicion(): TarjetaUpdate {
+    const datos = this.formulario;
+    const cambios: TarjetaUpdate = {
+      id_cuenta: datos.id_cuenta.trim(),
+      numero_tarjeta: datos.numero_tarjeta.trim(),
+      tipo_tarjeta: datos.tipo_tarjeta.trim(),
+      fecha_emision: datos.fecha_emision,
+      fecha_vencimiento: datos.fecha_vencimiento,
+      cvv: datos.cvv.trim(),
+      limite_credito: Number(datos.limite_credito),
+      estado: datos.estado.trim(),
+    };
+    if (this.idUsuarioEdicion.trim()) {
+      cambios.id_usuario_edicion = this.idUsuarioEdicion.trim();
+    }
+    return cambios;
+  }
+
+  private formularioVacio(): TarjetaCreate {
     return {
-      primer_nombre: '',
-      segundo_nombre: '',
-      primer_apellido: '',
-      segundo_apellido: '',
-      nombre_usuario: '',
-      clave: '',
+      id_cuenta: '',
+      numero_tarjeta: '',
+      tipo_tarjeta: '',
+      fecha_emision: '',
+      fecha_vencimiento: '',
+      cvv: '',
+      limite_credito: 0,
+      estado: '',
+      id_usuario_creacion: '',
     };
   }
 
@@ -210,7 +250,7 @@ export class Usuarios implements OnInit {
       return alListar ? 'No hay registros' : 'No encontrado';
     }
     if (error.status === 409) {
-      return 'Ese nombre de usuario ya existe';
+      return 'Ese numero de tarjeta ya existe';
     }
     if (error.status === 422) {
       return 'Revisa los datos. El filtro por ID tiene que ser un UUID.';
